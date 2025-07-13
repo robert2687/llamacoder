@@ -14,8 +14,6 @@ model GeneratedApp {
   prompt    String
   code      String
   createdAt DateTime @default(now())
-
-  @@index([id])
 }
 
 model Chat {
