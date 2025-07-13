@@ -113,30 +113,35 @@ const Home = memo(function Home() {
                 assert.ok(typeof model === "string");
                 assert.ok(quality === "high" || quality === "low");
 
-                const { chatId, lastMessageId } = await createChat(
-                  prompt,
-                  model,
-                  quality,
-                  screenshotUrl,
-                );
+                try {
+                  const { chatId, lastMessageId } = await createChat(
+                    prompt,
+                    model,
+                    quality,
+                    screenshotUrl,
+                  );
 
-                const streamPromise = fetch(
-                  "/api/get-next-completion-stream-promise",
-                  {
-                    method: "POST",
-                    body: JSON.stringify({ messageId: lastMessageId, model }),
-                  },
-                ).then((res) => {
-                  if (!res.body) {
-                    throw new Error("No body on response");
-                  }
-                  return res.body;
-                });
+                  const streamPromise = fetch(
+                    "/api/get-next-completion-stream-promise",
+                    {
+                      method: "POST",
+                      body: JSON.stringify({ messageId: lastMessageId, model }),
+                    },
+                  ).then((res) => {
+                    if (!res.body) {
+                      throw new Error("No body on response");
+                    }
+                    return res.body;
+                  });
 
-                startTransition(() => {
-                  setStreamPromise(streamPromise);
-                  router.push(`/chats/${chatId}`);
-                });
+                  startTransition(() => {
+                    setStreamPromise(streamPromise);
+                    router.push(`/chats/${chatId}`);
+                  });
+                } catch (error) {
+                  console.error('Failed to create chat:', error);
+                  alert('Database not configured. Please set up your database connection.');
+                }
               });
             }}
           >

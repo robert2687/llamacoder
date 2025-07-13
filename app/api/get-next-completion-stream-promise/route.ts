@@ -5,13 +5,15 @@ import { z } from "zod";
 import Together from "together-ai";
 
 export async function POST(req: Request) {
-  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('placeholder')) {
+  try {
+    const neon = new Pool({ connectionString: process.env.DATABASE_URL });
+    const adapter = new PrismaNeon(neon);
+    const prisma = new PrismaClient({ adapter });
+  } catch (error) {
+    console.warn('Database not available, API will not function properly');
     return new Response('Database not configured', { status: 503 });
   }
   
-  const neon = new Pool({ connectionString: process.env.DATABASE_URL });
-  const adapter = new PrismaNeon(neon);
-  const prisma = new PrismaClient({ adapter });
   const { messageId, model } = await req.json();
 
   const message = await prisma.message.findUnique({
