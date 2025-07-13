@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getPrisma } from "@/lib/prisma";
 import {
   getMainCodingPrompt,
@@ -201,6 +202,9 @@ export async function createMessage(
       chatId,
     },
   });
+
+  // Revalidate the chat page to ensure fresh data
+  revalidatePath(`/chats/${chat.id}`);
 
   return newMessage;
 }

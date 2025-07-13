@@ -1,6 +1,27 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+// Cache for parsed filenames to avoid repeated parsing
+const filenameCache = new Map<string, { name: string; extension: string }>();
+
+function parseFileName(fileName: string): { name: string; extension: string } {
+  if (filenameCache.has(fileName)) {
+    return filenameCache.get(fileName)!;
+  }
+  
+  // Split the string at the last dot
+  const lastDotIndex = fileName.lastIndexOf(".");
+  const result = lastDotIndex === -1
+    ? { name: fileName, extension: "" }
+    : {
+        name: fileName.slice(0, lastDotIndex),
+        extension: fileName.slice(lastDotIndex + 1),
+      };
+  
+  filenameCache.set(fileName, result);
+  return result;
+}
+
 export function extractFirstCodeBlock(input: string) {
   // 1) We use a more general pattern for the code fence:
   //    - ^```([^\n]*) captures everything after the triple backticks up to the newline.
@@ -35,19 +56,6 @@ export function extractFirstCodeBlock(input: string) {
     return { code, language, filename, fullMatch };
   }
   return null; // No code block found
-}
-
-function parseFileName(fileName: string): { name: string; extension: string } {
-  // Split the string at the last dot
-  const lastDotIndex = fileName.lastIndexOf(".");
-  if (lastDotIndex === -1) {
-    // No dot found
-    return { name: fileName, extension: "" };
-  }
-  return {
-    name: fileName.slice(0, lastDotIndex),
-    extension: fileName.slice(lastDotIndex + 1),
-  };
 }
 
 export function splitByFirstCodeFence(markdown: string) {

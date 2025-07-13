@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import type { Chat, Message } from "./page";
 import ArrowLeftIcon from "@/components/icons/arrow-left";
 import { splitByFirstCodeFence } from "@/lib/utils";
@@ -7,7 +8,7 @@ import { Fragment } from "react";
 import Markdown from "react-markdown";
 import { StickToBottom } from "use-stick-to-bottom";
 
-export default function ChatLog({
+const ChatLog = memo(function ChatLog({
   chat,
   activeMessage,
   streamText,
@@ -57,9 +58,9 @@ export default function ChatLog({
       </StickToBottom.Content>
     </StickToBottom>
   );
-}
+});
 
-function UserMessage({ content }: { content: string }) {
+const UserMessage = memo(function UserMessage({ content }: { content: string }) {
   return (
     <div className="relative inline-flex max-w-[80%] items-end gap-3 self-end">
       <div className="whitespace-pre-wrap rounded bg-white px-4 py-2 text-gray-600 shadow">
@@ -67,9 +68,9 @@ function UserMessage({ content }: { content: string }) {
       </div>
     </div>
   );
-}
+});
 
-function AssistantMessage({
+const AssistantMessage = memo(function AssistantMessage({
   content,
   version,
   message,
@@ -83,6 +84,10 @@ function AssistantMessage({
   onMessageClick?: (v: Message) => void;
 }) {
   const parts = splitByFirstCodeFence(content);
+
+  const handleClick = useCallback(() => {
+    if (message) onMessageClick?.(message);
+  }, [message, onMessageClick]);
 
   return (
     <div>
@@ -110,7 +115,7 @@ function AssistantMessage({
             <div className="my-4">
               <button
                 className={`${isActive ? "bg-white" : "bg-gray-300 hover:border-gray-400 hover:bg-gray-400"} inline-flex w-full items-center gap-2 rounded-lg border-4 border-gray-300 p-1.5`}
-                onClick={() => onMessageClick(message)}
+                onClick={handleClick}
               >
                 <div
                   className={`${isActive ? "bg-gray-300" : "bg-gray-200"} flex size-8 items-center justify-center rounded font-bold`}
@@ -165,7 +170,7 @@ function AssistantMessage({
       ))}
     </div>
   );
-}
+});
 
 export function toTitleCase(rawName: string): string {
   // Split on one or more hyphens or underscores
@@ -176,3 +181,5 @@ export function toTitleCase(rawName: string): string {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
     .join(" ");
 }
+
+export default ChatLog;

@@ -1,7 +1,8 @@
 import { getPrisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import PageClient from "./page.client";
+import Spinner from "@/components/spinner";
 
 export default async function Page({
   params,
@@ -13,7 +14,11 @@ export default async function Page({
 
   if (!chat) notFound();
 
-  return <PageClient chat={chat} />;
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center"><Spinner className="size-8" /></div>}>
+      <PageClient chat={chat} />
+    </Suspense>
+  );
 }
 
 const getChatById = cache(async (id: string) => {

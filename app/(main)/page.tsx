@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
+import { memo, useCallback, useMemo } from "react";
 import Fieldset from "@/components/fieldset";
 import ArrowRightIcon from "@/components/icons/arrow-right";
 import LightningBoltIcon from "@/components/icons/lightning-bolt";
@@ -22,7 +23,7 @@ import UploadIcon from "@/components/icons/upload-icon";
 import { XCircleIcon } from "@heroicons/react/20/solid";
 import { MODELS, SUGGESTED_PROMPTS } from "@/lib/constants";
 
-export default function Home() {
+const Home = memo(function Home() {
   const { setStreamPromise } = use(Context);
   const router = useRouter();
 
@@ -39,20 +40,35 @@ export default function Home() {
   const [isPending, startTransition] = useTransition();
 
   const { uploadToS3 } = useS3Upload();
-  const handleScreenshotUpload = async (event: any) => {
+  
+  const handleScreenshotUpload = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (prompt.length === 0) setPrompt("Build this");
     setQuality("low");
     setScreenshotLoading(true);
-    let file = event.target.files[0];
-    const { url } = await uploadToS3(file);
-    setScreenshotUrl(url);
-    setScreenshotLoading(false);
-  };
+    try {
+      const file = event.target.files?.[0];
+      if (file) {
+        const { url } = await uploadToS3(file);
+        setScreenshotUrl(url);
+      }
+    } catch (error) {
+      console.error('Upload failed:', error);
+    } finally {
+      setScreenshotLoading(false);
+    }
+  }, [prompt.length, uploadToS3]);
 
-  const textareaResizePrompt = prompt
-    .split("\n")
-    .map((text) => (text === "" ? "a" : text))
-    .join("\n");
+  const textareaResizePrompt = useMemo(() => 
+    prompt
+      .split("\n")
+      .map((text) => (text === "" ? "a" : text))
+      .join("\n"),
+    [prompt]
+  );
+
+  const handlePromptSuggestion = useCallback((description: string) => {
+    setPrompt(description);
+  }, []);
 
   return (
     <div className="relative flex grow flex-col">
@@ -326,7 +342,7 @@ export default function Home() {
                   <button
                     key={v.title}
                     type="button"
-                    onClick={() => setPrompt(v.description)}
+                    onClick={() => handlePromptSuggestion(v.description)}
                     className="rounded bg-gray-200 px-2.5 py-1.5 text-xs hover:bg-gray-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-300"
                   >
                     {v.title}
@@ -387,7 +403,9 @@ export default function Home() {
       </div>
     </div>
   );
-}
+});
+
+export default Home;
 
 function LoadingMessage({
   isHighQuality,

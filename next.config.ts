@@ -1,6 +1,13 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-select', '@radix-ui/react-toast'],
+  },
+  images: {
+    domains: ['github.com'],
+    formats: ['image/webp', 'image/avif'],
+  },
   serverExternalPackages: ["@codesandbox/sdk"],
   webpack: (config, options) => {
     if (options.nextRuntime === "edge") {

@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import ArrowRightIcon from "@/components/icons/arrow-right";
 import Spinner from "@/components/spinner";
 import assert from "assert";
@@ -8,7 +9,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { createMessage } from "../../actions";
 import { type Chat } from "./page";
 
-export default function ChatBox({
+const ChatBox = memo(function ChatBox({
   chat,
   onNewStreamPromise,
   isStreaming,
@@ -27,6 +28,15 @@ export default function ChatBox({
     .split("\n")
     .map((text) => (text === "" ? "a" : text))
     .join("\n");
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      const target = event.target;
+      if (!(target instanceof HTMLTextAreaElement)) return;
+      target.closest("form")?.requestSubmit();
+    }
+  }, []);
 
   useEffect(() => {
     if (!textareaRef.current) return;
@@ -87,14 +97,7 @@ export default function ChatBox({
                 required
                 name="prompt"
                 className="peer absolute inset-0 w-full resize-none bg-transparent p-2 placeholder-gray-500 focus:outline-none disabled:opacity-50"
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault();
-                    const target = event.target;
-                    if (!(target instanceof HTMLTextAreaElement)) return;
-                    target.closest("form")?.requestSubmit();
-                  }
-                }}
+                onKeyDown={handleKeyDown}
               />
             </div>
             <div className="pointer-events-none absolute inset-0 rounded peer-focus:outline peer-focus:outline-offset-0 peer-focus:outline-blue-500" />
@@ -116,4 +119,6 @@ export default function ChatBox({
       </form>
     </div>
   );
-}
+});
+
+export default ChatBox;

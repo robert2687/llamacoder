@@ -1,5 +1,6 @@
 "use client";
 
+import { memo, useCallback } from "react";
 import * as shadcnComponents from "@/lib/shadcn";
 import {
   SandpackPreview,
@@ -10,40 +11,42 @@ import dedent from "dedent";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { useState } from "react";
 
-export default function ReactCodeRunner({
+const ReactCodeRunner = memo(function ReactCodeRunner({
   code,
   onRequestFix,
 }: {
   code: string;
   onRequestFix?: (e: string) => void;
 }) {
+  const sandpackFiles = useMemo(() => ({
+    "App.tsx": code,
+    ...shadcnFiles,
+    "/tsconfig.json": {
+      code: `{
+        "include": [
+          "./**/*"
+        ],
+        "compilerOptions": {
+          "strict": true,
+          "esModuleInterop": true,
+          "lib": [ "dom", "es2015" ],
+          "jsx": "react-jsx",
+          "baseUrl": "./",
+          "paths": {
+            "@/components/*": ["components/*"]
+          }
+        }
+      }
+    `,
+    },
+  }), [code]);
+
   return (
     <SandpackProvider
       key={code}
       template="react-ts"
       className="relative h-full w-full [&_.sp-preview-container]:flex [&_.sp-preview-container]:h-full [&_.sp-preview-container]:w-full [&_.sp-preview-container]:grow [&_.sp-preview-container]:flex-col [&_.sp-preview-container]:justify-center [&_.sp-preview-iframe]:grow"
-      files={{
-        "App.tsx": code,
-        ...shadcnFiles,
-        "/tsconfig.json": {
-          code: `{
-            "include": [
-              "./**/*"
-            ],
-            "compilerOptions": {
-              "strict": true,
-              "esModuleInterop": true,
-              "lib": [ "dom", "es2015" ],
-              "jsx": "react-jsx",
-              "baseUrl": "./",
-              "paths": {
-                "@/components/*": ["components/*"]
-              }
-            }
-          }
-        `,
-        },
-      }}
+      files={sandpackFiles}
       options={{
         externalResources: [
           "https://unpkg.com/@tailwindcss/ui/dist/tailwind-ui.min.css",
@@ -64,11 +67,25 @@ export default function ReactCodeRunner({
       {onRequestFix && <ErrorMessage onRequestFix={onRequestFix} />}
     </SandpackProvider>
   );
-}
+});
 
-function ErrorMessage({ onRequestFix }: { onRequestFix: (e: string) => void }) {
+const ErrorMessage = memo(function ErrorMessage({ onRequestFix }: { onRequestFix: (e: string) => void }) {
   const { sandpack } = useSandpack();
   const [didCopy, setDidCopy] = useState(false);
+
+  const handleCopy = useCallback(async () => {
+    if (!sandpack.error) return;
+
+    setDidCopy(true);
+    await window.navigator.clipboard.writeText(sandpack.error.message);
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    setDidCopy(false);
+  }, [sandpack.error]);
+
+  const handleRequestFix = useCallback(() => {
+    if (!sandpack.error) return;
+    onRequestFix(sandpack.error.message);
+  }, [sandpack.error, onRequestFix]);
 
   if (!sandpack.error) return null;
 
@@ -83,25 +100,13 @@ function ErrorMessage({ onRequestFix }: { onRequestFix: (e: string) => void }) {
 
         <div className="mt-8 flex justify-between gap-4">
           <button
-            onClick={async () => {
-              if (!sandpack.error) return;
-
-              setDidCopy(true);
-              await window.navigator.clipboard.writeText(
-                sandpack.error.message,
-              );
-              await new Promise((resolve) => setTimeout(resolve, 2000));
-              setDidCopy(false);
-            }}
+            onClick={handleCopy}
             className="rounded border-red-300 px-2.5 py-1.5 text-sm font-semibold text-red-50"
           >
             {didCopy ? <CheckIcon size={18} /> : <CopyIcon size={18} />}
           </button>
           <button
-            onClick={() => {
-              if (!sandpack.error) return;
-              onRequestFix(sandpack.error.message);
-            }}
+            onClick={handleRequestFix}
             className="rounded bg-white px-2.5 py-1.5 text-sm font-medium text-black"
           >
             Try to fix
@@ -110,7 +115,9 @@ function ErrorMessage({ onRequestFix }: { onRequestFix: (e: string) => void }) {
       </div>
     </div>
   );
-}
+});
+
+export default ReactCodeRunner;
 
 const shadcnFiles = {
   "/lib/utils.ts": shadcnComponents.utils,

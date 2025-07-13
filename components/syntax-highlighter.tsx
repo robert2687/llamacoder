@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, memo, useMemo } from "react";
 import { createHighlighter } from "shiki/bundle/web";
 
 const highlighterPromise = createHighlighter({
@@ -31,7 +31,7 @@ const highlighterPromise = createHighlighter({
   themes: ["github-light-default"],
 });
 
-export default function SyntaxHighlighter({
+const SyntaxHighlighter = memo(function SyntaxHighlighter({
   code,
   language,
 }: {
@@ -39,12 +39,18 @@ export default function SyntaxHighlighter({
   language: string;
 }) {
   const highlighter = use(highlighterPromise);
-  const html = highlighter.codeToHtml(code, {
-    lang: language,
-    theme: "github-light-default",
-  });
+  
+  const html = useMemo(() => 
+    highlighter.codeToHtml(code, {
+      lang: language,
+      theme: "github-light-default",
+    }),
+    [highlighter, code, language]
+  );
 
   return (
     <div className="p-4 text-sm" dangerouslySetInnerHTML={{ __html: html }} />
   );
-}
+});
+
+export default SyntaxHighlighter;
