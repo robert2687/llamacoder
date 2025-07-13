@@ -17,6 +17,11 @@ export async function createChat(
   screenshotUrl: string | undefined,
 ) {
   const prisma = getPrisma();
+  
+  if (!process.env.DATABASE_URL || process.env.DATABASE_URL.includes('placeholder')) {
+    throw new Error('Database not configured. Please set up your DATABASE_URL environment variable.');
+  }
+  
   const chat = await prisma.chat.create({
     data: {
       model,
