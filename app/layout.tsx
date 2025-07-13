@@ -1,49 +1,19 @@
-import type { Metadata } from "next";
-import PlausibleProvider from "next-plausible";
-import "./globals.css";
-
-let title = "Llama Coder – AI Code Generator";
-let description = "Generate your next app with Llama 3.1 405B";
-let url = "https://llamacoder.io/";
-let ogimage = "https://llamacoder.io/og-image.png";
-let sitename = "llamacoder.io";
+import type { Metadata } from "next"
+import "./globals.css"
 
 export const metadata: Metadata = {
-  metadataBase: new URL(url),
-  title,
-  description,
-  icons: {
-    icon: "/favicon.ico",
-  },
-  openGraph: {
-    images: [ogimage],
-    title,
-    description,
-    url: url,
-    siteName: sitename,
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    images: [ogimage],
-    title,
-    description,
-  },
-};
+  title: "Simple Code Generator",
+  description: "Generate React apps with AI",
+}
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: {
+  children: React.ReactNode
+}) {
   return (
-    <html lang="en" className="h-full">
-      <head>
-        <PlausibleProvider domain="llamacoder.io" />
-      </head>
-
-      {children}
+    <html lang="en">
+      <body className="antialiased">{children}</body>
     </html>
-  );
+  )
 }
